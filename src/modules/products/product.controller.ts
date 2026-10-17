@@ -7,7 +7,10 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
+import { AdminGuard } from 'common/utils/security/admin.guard';
+import { AccessTokenGuard } from 'common/utils/security/access-token.guard';
 import { CreateProductDto, UpdateProductDto } from './product.dto';
 import { ProductService } from './product.service';
 
@@ -16,6 +19,7 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
+  @UseGuards(AccessTokenGuard, AdminGuard)
   async create(@Body() data: CreateProductDto) {
     return this.productService.create(data);
   }
@@ -25,18 +29,15 @@ export class ProductController {
     return this.productService.findAll();
   }
 
-  @Get(':id')
-  async findById(@Param('id') id: string) {
-    return this.productService.findById(id);
-  }
-
   @Patch(':id')
+  @UseGuards(AccessTokenGuard, AdminGuard)
   async update(@Param('id') id: string, @Body() data: UpdateProductDto) {
     return this.productService.update(id, data);
   }
 
   @HttpCode(200)
   @Delete(':id')
+  @UseGuards(AccessTokenGuard, AdminGuard)
   async remove(@Param('id') id: string) {
     return this.productService.remove(id);
   }

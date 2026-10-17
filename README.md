@@ -25,6 +25,28 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Commerce API
+
+Authenticate with `POST /auth/login`, then send the returned access token as
+`Authorization: Bearer <token>` for protected routes.
+
+- Public catalog: `GET /products`
+- Cart: `GET /cart` and `PUT /cart/items/:productId` with `{ "quantity": 2 }`;
+  set quantity to `0` to remove an item
+- Checkout: `POST /orders` with a `shippingAddress` object; this creates a
+  pending cash-on-delivery payment, reserves stock, and clears the cart
+- Customer order history: `GET /orders` includes order and payment details
+- Admin order actions: `PATCH /orders/:id` with a `status` of `confirmed`,
+  `processing`, `shipped`, `delivered`, or `cancelled`; set `paymentReceived` to
+  `true` when cash is collected on a delivered order
+- Admin product actions: `POST /products`, `PATCH /products/:id`, and
+  `DELETE /products/:id`; user administration requires an admin access token
+
+Order statuses move forward through `pending`, `confirmed`, `processing`,
+`shipped`, and `delivered`. Cancelling an order restores its reserved stock.
+Online payment processing is not configured; cash on delivery is the only
+supported payment method.
+
 ## Project setup
 
 ```bash

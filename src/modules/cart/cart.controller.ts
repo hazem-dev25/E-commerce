@@ -1,17 +1,15 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
-  Patch,
-  Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { AccessTokenGuard } from 'common/utils/security/access-token.guard';
 import type { AuthenticatedRequest } from 'common/utils/security/access-token.guard';
-import { AddCartItemDto, UpdateCartItemDto } from './cart.dto';
+import { SetCartItemDto } from './cart.dto';
 import { CartService } from './cart.service';
 
 @Controller('cart')
@@ -24,41 +22,12 @@ export class CartController {
     return this.cartService.getCart(request.user.sub);
   }
 
-  @Post('items')
-  addItem(
-    @Req() request: AuthenticatedRequest,
-    @Body() data: AddCartItemDto,
-  ) {
-    return this.cartService.addItem(
-      request.user.sub,
-      data.productId,
-      data.quantity,
-    );
-  }
-
-  @Patch('items/:productId')
-  updateItem(
+  @Put('items/:productId')
+  setItem(
     @Req() request: AuthenticatedRequest,
     @Param('productId') productId: string,
-    @Body() data: UpdateCartItemDto,
+    @Body() data: SetCartItemDto,
   ) {
-    return this.cartService.updateItem(
-      request.user.sub,
-      productId,
-      data.quantity,
-    );
-  }
-
-  @Delete('items/:productId')
-  removeItem(
-    @Req() request: AuthenticatedRequest,
-    @Param('productId') productId: string,
-  ) {
-    return this.cartService.removeItem(request.user.sub, productId);
-  }
-
-  @Delete()
-  clearCart(@Req() request: AuthenticatedRequest) {
-    return this.cartService.clearCart(request.user.sub);
+    return this.cartService.setItem(request.user.sub, productId, data.quantity);
   }
 }

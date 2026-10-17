@@ -6,11 +6,13 @@ import { AuthRepository } from 'repository';
 import { createClient } from 'redis';
 import { ConfigService } from '@nestjs/config';
 import { CacheService } from 'common/service/cache.service';
-import  { SendEmail } from 'common/utils/email.event';
-import { EmailService } from '../../common/utils/email.service'
+import { SendEmail } from 'common/utils/email.event';
+import { EmailService } from '../../common/utils/email.service';
+import { AccessTokenGuard } from 'common/utils/security/access-token.guard';
+import { AdminGuard } from 'common/utils/security/admin.guard';
 @Module({
-  imports: [AuthModel ],
-  exports: ["Redis_url"],
+  imports: [AuthModel],
+  exports: ['Redis_url'],
   controllers: [authController],
   providers: [
     {
@@ -35,7 +37,9 @@ import { EmailService } from '../../common/utils/email.service'
     EmailService,
     authService,
     AuthRepository,
-    CacheService
+    CacheService,
+    AccessTokenGuard,
+    AdminGuard,
   ],
 })
 export class AuthModule {}

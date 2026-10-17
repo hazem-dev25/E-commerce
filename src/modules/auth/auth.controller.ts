@@ -8,15 +8,14 @@ import {
   Patch,
   Post,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import { AdminGuard } from 'common/utils/security/admin.guard';
+import { AccessTokenGuard } from 'common/utils/security/access-token.guard';
 import { iAuth } from 'common/interface/auth.interface';
 import { authService } from './auth.service';
-import {
-  AuthLoginDto,
-  AuthSignUpDTO,
-  AuthVarifyEmail,
-} from './auth.dto';
+import { AuthLoginDto, AuthSignUpDTO, AuthVarifyEmail } from './auth.dto';
 
 @Controller('auth')
 export class authController {
@@ -59,27 +58,28 @@ export class authController {
 
   @HttpCode(200)
   @Get('getUsers')
+  @UseGuards(AccessTokenGuard, AdminGuard)
   async getAllUsers() {
     return await this.authService.getAllUsers();
   }
 
   @HttpCode(200)
   @Get('getUsersById/:id')
+  @UseGuards(AccessTokenGuard, AdminGuard)
   async getAllUsersByID(@Param('id') id: string) {
     return await this.authService.getAllUsersByID(id);
   }
 
   @HttpCode(201)
   @Patch('UpdateUserById/:id')
-  async updateUserByID(
-    @Param('id') id: string,
-    @Body() data: Partial<iAuth>,
-  ) {
+  @UseGuards(AccessTokenGuard, AdminGuard)
+  async updateUserByID(@Param('id') id: string, @Body() data: Partial<iAuth>) {
     return await this.authService.updateUserByID(id, data);
   }
 
   @HttpCode(200)
   @Delete('deleteUserByID/:id')
+  @UseGuards(AccessTokenGuard, AdminGuard)
   async deleteUserByID(@Param('id') id: string) {
     return await this.authService.deleteUserByID(id);
   }

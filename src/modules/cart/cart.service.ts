@@ -1,11 +1,12 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Cart, CartLine } from 'model/cart.model';
+import { Cart } from 'model/cart.model';
 import { Product } from 'model/product.model';
 
 @Injectable()
@@ -36,85 +37,53 @@ export class CartService {
             }
           : null,
         quantity: item.quantity,
-        lineTotal: product ? product.price * item.quantity : 0,
+        lineTotal: product
+          ? Number((product.price * item.quantity).toFixed(2))
+          : 0,
       };
     });
 
     return {
       items,
       totalItems: items.reduce((total, item) => total + item.quantity, 0),
-      subtotal: items.reduce((total, item) => total + item.lineTotal, 0),
+      subtotal: Number(
+        items.reduce((total, item) => total + item.lineTotal, 0).toFixed(2),
+      ),
     };
   }
 
-  async addItem(userId: string, productId: string, quantity: number) {
-    const product = await this.getAvailableProduct(productId, quantity);
-    const cart = await this.getOrCreateCart(userId);
-    const existingItem = cart.items.find((item) =>
-      item.productId.equals(product._id),
-    );
-    const nextQuantity = (existingItem?.quantity ?? 0) + quantity;
-    if (nextQuantity > product.stock) {
-      throw new BadRequestException('requested quantity exceeds available stock');
-    }
-
-    if (existingItem) {
-      existingItem.quantity = nextQuantity;
-    } else {
-      cart.items.push({ productId: product._id, quantity });
-    }
-    await cart.save();
-    return this.getCart(userId);
-  }
-
-  async updateItem(userId: string, productId: string, quantity: number) {
-    const product = await this.getAvailableProduct(productId, quantity);
-    const cart = await this.getOrCreateCart(userId);
-    const item = cart.items.find((line) => line.productId.equals(product._id));
-    if (!item) {
-      throw new NotFoundException('cart item not found');
-    }
-    if (quantity > product.stock) {
-      throw new BadRequestException('requested quantity exceeds available stock');
-    }
-
-    item.quantity = quantity;
-    await cart.save();
-    return this.getCart(userId);
-  }
-
-  async removeItem(userId: string, productId: string) {
+  async setItem(userId: string, productId: string, quantity: number) {
     this.validateProductId(productId);
-    const cart = await this.getOrCreateCart(userId);
-    const itemIndex = cart.items.findIndex((item) =>
-      item.productId.equals(productId),
-    );
-    if (itemIndex === -1) {
-      throw new NotFoundException('cart item not found');
+    const cart = await this.lockCart(userId);
+    try {
+      const itemIndex = cart.items.findIndex((item) =>
+        item.productId.equals(productId),
+      );
+      if (quantity === 0) {
+        if (itemIndex !== -1) {
+          cart.items.splice(itemIndex, 1);
+        }
+      } else {
+        const product = await this.productModel.findById(productId).exec();
+        if (!product) {
+          throw new NotFoundException('product not found');
+        }
+        if (quantity > product.stock) {
+          throw new BadRequestException(
+            'requested quantity exceeds available stock',
+          );
+        }
+        if (itemIndex === -1) {
+          cart.items.push({ productId: product._id, quantity });
+        } else {
+          cart.items[itemIndex].quantity = quantity;
+        }
+      }
+      await cart.save();
+      return await this.getCart(userId);
+    } finally {
+      await this.releaseCart(cart._id);
     }
-
-    cart.items.splice(itemIndex, 1);
-    await cart.save();
-    return this.getCart(userId);
-  }
-
-  async clearCart(userId: string) {
-    const cart = await this.getOrCreateCart(userId);
-    cart.items = [];
-    await cart.save();
-    return { items: [], totalItems: 0, subtotal: 0 };
-  }
-
-  private async getAvailableProduct(productId: string, quantity: number) {
-    this.validateProductId(productId);
-    const product = await this.productModel.findById(productId).exec();
-    if (!product) {
-      throw new NotFoundException('product not found');
-    }
-    if (quantity > product.stock) {
-      throw new BadRequestException('requested quantity exceeds available stock');
-    }
-    return product;
   }
 
   private async getOrCreateCart(userId: string) {
@@ -134,5 +103,43 @@ export class CartService {
     if (!Types.ObjectId.isValid(productId)) {
       throw new BadRequestException('invalid product id');
     }
+  }
+
+  private async lockCart(userId: string) {
+    const cart = await this.getOrCreateCart(userId);
+    const lockedCart = await this.cartModel
+      .findOneAndUpdate(
+        {
+          _id: cart._id,
+          $or: [
+            { checkoutInProgress: { $ne: true } },
+            { checkoutLockUntil: { $lt: new Date() } },
+          ],
+        },
+        {
+          $set: {
+            checkoutInProgress: true,
+            checkoutLockUntil: new Date(Date.now() + 5 * 60 * 1000),
+          },
+        },
+        { new: true },
+      )
+      .exec();
+    if (!lockedCart) {
+      throw new ConflictException('cart checkout or update is in progress');
+    }
+    return lockedCart;
+  }
+
+  private async releaseCart(cartId: Types.ObjectId) {
+    await this.cartModel
+      .updateOne(
+        { _id: cartId },
+        {
+          $set: { checkoutInProgress: false },
+          $unset: { checkoutLockUntil: 1 },
+        },
+      )
+      .exec();
   }
 }

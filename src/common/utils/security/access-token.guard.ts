@@ -57,7 +57,10 @@ export class AccessTokenGuard implements CanActivate {
         .update(`${encodedHeader}.${encodedPayload}`)
         .digest();
       const actual = Buffer.from(signature, 'base64url');
-      if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
+      if (
+        actual.length !== expected.length ||
+        !timingSafeEqual(actual, expected)
+      ) {
         throw new UnauthorizedException('invalid bearer token');
       }
 

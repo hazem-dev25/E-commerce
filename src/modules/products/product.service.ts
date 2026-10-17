@@ -23,15 +23,6 @@ export class ProductService {
     return this.productModel.find().sort({ createdAt: -1 }).exec();
   }
 
-  async findById(id: string) {
-    this.validateId(id);
-    const product = await this.productModel.findById(id).exec();
-    if (!product) {
-      throw new NotFoundException('product not found');
-    }
-    return product;
-  }
-
   async update(id: string, data: UpdateProductDto) {
     this.validateId(id);
     const product = await this.productModel

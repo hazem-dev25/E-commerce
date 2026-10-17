@@ -1,17 +1,7 @@
-import { IsInt, IsMongoId, IsNotEmpty, Min } from 'class-validator';
+import { IsInt, Min } from 'class-validator';
 
-export class AddCartItemDto {
-  @IsMongoId()
-  @IsNotEmpty()
-  productId!: string;
-
+export class SetCartItemDto {
   @IsInt()
-  @Min(1)
-  quantity!: number;
-}
-
-export class UpdateCartItemDto {
-  @IsInt()
-  @Min(1)
+  @Min(0)
   quantity!: number;
 }

@@ -26,6 +26,12 @@ export class Cart {
     default: [],
   })
   items!: CartLine[];
+
+  @Prop({ type: Boolean, default: false })
+  checkoutInProgress!: boolean;
+
+  @Prop({ type: Date })
+  checkoutLockUntil?: Date;
 }
 
 export const CartSchema = SchemaFactory.createForClass(Cart);
