@@ -3,6 +3,8 @@
 /node_modules
 /build
 
+
+.gitignore
 # Logs
 logs
 *.log
@@ -36,11 +38,8 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # dotenv environment variable files
-.env
-.env.dev
-.env.test.local
-.env.prod
-.env.local
+.env*
+!.env.example
 
 # temp directory
 .temp
