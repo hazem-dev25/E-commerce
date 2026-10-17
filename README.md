@@ -26,17 +26,10 @@ Install dependencies:
 npm install
 ```
 
-Create a local `.env.dev` file in the project root. This file is ignored by Git. Use your own values; do not commit secrets.
+Copy `.env.example` to `.env.dev` in the project root, then replace the placeholder values with your local settings. `.env.dev` is ignored by Git; never commit real credentials.
 
-```dotenv
-PORT=3000
-DB_URL=mongodb://127.0.0.1:27017/ecommerce
-REDIS_URL=redis://127.0.0.1:6379
-SALT=12
-USER_JWT=replace-with-a-long-random-secret
-ADMIN_JWT=replace-with-another-long-random-secret
-APP_EMAIL=your-email@gmail.com
-APP_PASSWORD=your-gmail-app-password
+```powershell
+Copy-Item .env.example .env.dev
 ```
 
 `DB_URL`, `REDIS_URL`, `USER_JWT`, and `ADMIN_JWT` are required for the API to run. `APP_EMAIL` and `APP_PASSWORD` are required for email verification and password recovery. `SALT` is used by password hashing.
