@@ -1,120 +1,227 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# E-commerce API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A REST API for an e-commerce application built with NestJS, TypeScript, and MongoDB. It includes account authentication, a product catalog, categories, brands, a customer cart, and order checkout with cash on delivery.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
 
-## Description
+- Sign up, email verification, login, and password recovery
+- Product catalog linked to categories and brands
+- Admin-only catalog and user-management operations
+- User-specific carts with stock validation
+- Checkout, order history, order status updates, and stock restoration on cancellation
+- Consistent success and error response formats
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Requirements
 
-## Commerce API
+- Node.js 20 or later
+- MongoDB
+- Redis
+- A Gmail account with an app password for email features
 
-Authenticate with `POST /auth/login`, then send the returned access token as
-`Authorization: Bearer <token>` for protected routes.
+## Setup
 
-- Public catalog: `GET /products`
-- Cart: `GET /cart` and `PUT /cart/items/:productId` with `{ "quantity": 2 }`;
-  set quantity to `0` to remove an item
-- Checkout: `POST /orders` with a `shippingAddress` object; this creates a
-  pending cash-on-delivery payment, reserves stock, and clears the cart
-- Customer order history: `GET /orders` includes order and payment details
-- Admin order actions: `PATCH /orders/:id` with a `status` of `confirmed`,
-  `processing`, `shipped`, `delivered`, or `cancelled`; set `paymentReceived` to
-  `true` when cash is collected on a delivered order
-- Admin product actions: `POST /products`, `PATCH /products/:id`, and
-  `DELETE /products/:id`; user administration requires an admin access token
-
-Order statuses move forward through `pending`, `confirmed`, `processing`,
-`shipped`, and `delivered`. Cancelling an order restores its reserved stock.
-Online payment processing is not configured; cash on delivery is the only
-supported payment method.
-
-## Project setup
+Install dependencies:
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+Create a local `.env.dev` file in the project root. This file is ignored by Git. Use your own values; do not commit secrets.
+
+```dotenv
+PORT=3000
+DB_URL=mongodb://127.0.0.1:27017/ecommerce
+REDIS_URL=redis://127.0.0.1:6379
+SALT=12
+USER_JWT=replace-with-a-long-random-secret
+ADMIN_JWT=replace-with-another-long-random-secret
+APP_EMAIL=your-email@gmail.com
+APP_PASSWORD=your-gmail-app-password
+```
+
+`DB_URL`, `REDIS_URL`, `USER_JWT`, and `ADMIN_JWT` are required for the API to run. `APP_EMAIL` and `APP_PASSWORD` are required for email verification and password recovery. `SALT` is used by password hashing.
+
+Start the API in development mode:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run start:dev
 ```
 
-## Run tests
+The API uses `PORT` when set and otherwise listens on port `8000`.
 
-```bash
-# unit tests
-$ npm run test
+## Scripts
 
-# e2e tests
-$ npm run test:e2e
+| Command              | Description                        |
+| -------------------- | ---------------------------------- |
+| `npm run start:dev`  | Start in watch mode                |
+| `npm run start`      | Start the application              |
+| `npm run start:prod` | Run the compiled application       |
+| `npm run build`      | Compile the application            |
+| `npm test`           | Run unit tests                     |
+| `npm run test:e2e`   | Run end-to-end tests               |
+| `npm run test:cov`   | Run tests with coverage            |
+| `npm run format`     | Format TypeScript source and tests |
 
-# test coverage
-$ npm run test:cov
+## Authentication
+
+Create an account with `POST /auth/signup`:
+
+```json
+{
+  "username": "Jamie Doe",
+  "age": 25,
+  "email": "jamie@example.com",
+  "password": "StrongPass1!",
+  "confirmPassword": "StrongPass1!"
+}
 ```
 
-## Deployment
+Passwords must contain at least eight characters, including uppercase and lowercase letters, a number, and a symbol. Verify the email with `POST /auth/verify-email`, then log in with `POST /auth/login`:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```json
+{
+  "email": "jamie@example.com",
+  "password": "StrongPass1!"
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Send the returned access token on protected requests:
 
-## Resources
+```http
+Authorization: Bearer <access-token>
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+Public sign-up creates a regular user. Admin accounts must be provisioned through a trusted process; do not expose admin credentials or promote users through a public endpoint.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## API
 
-## Support
+All request and response bodies use JSON. Validation rejects fields that are not part of the endpoint DTO.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Authentication
 
-## Stay in touch
+| Method   | Endpoint                   | Access |
+| -------- | -------------------------- | ------ |
+| `POST`   | `/auth/signup`             | Public |
+| `POST`   | `/auth/verify-email`       | Public |
+| `POST`   | `/auth/login`              | Public |
+| `POST`   | `/auth/forget-password`    | Public |
+| `POST`   | `/auth/reset-password/:id` | Public |
+| `GET`    | `/auth/getUsers`           | Admin  |
+| `GET`    | `/auth/getUsersById/:id`   | Admin  |
+| `PATCH`  | `/auth/UpdateUserById/:id` | Admin  |
+| `DELETE` | `/auth/deleteUserByID/:id` | Admin  |
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Catalog
 
-## License
+| Method   | Endpoint          | Access |
+| -------- | ----------------- | ------ |
+| `GET`    | `/products`       | Public |
+| `POST`   | `/products`       | Admin  |
+| `PATCH`  | `/products/:id`   | Admin  |
+| `DELETE` | `/products/:id`   | Admin  |
+| `GET`    | `/categories`     | Public |
+| `POST`   | `/categories`     | Admin  |
+| `PATCH`  | `/categories/:id` | Admin  |
+| `DELETE` | `/categories/:id` | Admin  |
+| `GET`    | `/brands`         | Public |
+| `POST`   | `/brands`         | Admin  |
+| `PATCH`  | `/brands/:id`     | Admin  |
+| `DELETE` | `/brands/:id`     | Admin  |
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Create a category or brand before creating a product. Product `category` and `brand` values must be their MongoDB ObjectIds. The product list includes populated category and brand details. Categories and brands cannot be deleted while products reference them.
+
+Example category request:
+
+```json
+{
+  "name": "Accessories",
+  "description": "Everyday accessories"
+}
+```
+
+Example product request:
+
+```json
+{
+  "name": "Canvas Backpack",
+  "description": "A lightweight everyday backpack.",
+  "price": 49.99,
+  "stock": 20,
+  "category": "<category-object-id>",
+  "brand": "<brand-object-id>",
+  "images": ["https://example.com/backpack.jpg"],
+  "sku": "BAG-001"
+}
+```
+
+### Cart and orders
+
+| Method  | Endpoint                 | Access             |
+| ------- | ------------------------ | ------------------ |
+| `GET`   | `/cart`                  | Authenticated user |
+| `PUT`   | `/cart/items/:productId` | Authenticated user |
+| `POST`  | `/orders`                | Authenticated user |
+| `GET`   | `/orders`                | Authenticated user |
+| `PATCH` | `/orders/:id`            | Admin              |
+
+Set an item's quantity with `PUT /cart/items/:productId`:
+
+```json
+{
+  "quantity": 2
+}
+```
+
+The quantity is the new total, not an increment. Set it to `0` to remove the item. Cart quantities cannot exceed available stock.
+
+Create an order with `POST /orders`:
+
+```json
+{
+  "shippingAddress": {
+    "fullName": "Jamie Doe",
+    "phone": "+1-555-0100",
+    "addressLine1": "123 Main Street",
+    "city": "Springfield",
+    "state": "CA",
+    "postalCode": "90001",
+    "country": "US"
+  }
+}
+```
+
+Checkout currently creates a pending cash-on-delivery payment, reserves the requested stock, and clears the cart. `GET /orders` returns the authenticated user's order history with payment details.
+
+Stripe card payments are planned but are not implemented yet. The integration will require a Stripe account, API keys, and a webhook signing secret. Stripe may charge transaction fees; using its SDK does not make payment processing free.
+
+Admins update order status with `PATCH /orders/:id`:
+
+```json
+{
+  "status": "confirmed"
+}
+```
+
+Allowed transitions are `pending` to `confirmed` or `cancelled`, `confirmed` to `processing` or `cancelled`, `processing` to `shipped` or `cancelled`, and `shipped` to `delivered`. Cancelling an order restores its reserved stock. To record cash collected on delivery, send the delivered status with `paymentReceived` set to `true`.
+
+## Response format
+
+Successful responses use this envelope:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Request successful",
+  "data": {},
+  "timestamp": "2026-01-01T12:00:00.000Z"
+}
+```
+
+Errors use the same fields, with `success` set to `false` and `data` set to `null`. The `message` may be a string or an array for validation errors.
+
+## Notes
+
+- Keep `.env.dev` and `.env.prod` local. Rotate any credentials that were previously committed or shared.
+- Existing product records created before category and brand references were added may need their `category` values migrated to ObjectIds and a `brand` assigned.
+- The end-to-end tests require the configured MongoDB and Redis services.
